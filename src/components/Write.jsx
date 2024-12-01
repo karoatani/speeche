@@ -31,15 +31,16 @@ const Write = () => {
   const { addAuthInterceptor } = useAxiosWithAuth();
 
   useEffect(() => {
-    addAuthInterceptor(); 
+    addAuthInterceptor();
   }, [addAuthInterceptor]);
 
 
-  
+
   useEffect(() => {
     async function translateContent() {
       if (content) {
-        const translatedText = await translate(language1code, language2code, content);
+        const contentStripHtml = strip(content);
+        const translatedText = await translate(language1code, language2code, contentStripHtml);
         textAreaSecondRef.current.value = translatedText;
       }
     }
@@ -56,6 +57,11 @@ const Write = () => {
     { "English Us": "en-US" },
     { "Japanese": "ja" },
   ];
+
+  function strip(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || "";
+  }
 
   const handleLanguageChange = (e) => {
     const value = e.target.value;
@@ -126,18 +132,32 @@ const Write = () => {
 
   const handleSaveToDb = () => {
     mutation.mutate({
-        "title": title,
-        "user": auth.user.user_id,
-        "content": content,
-        "content2": textAreaSecondRef.current.value,
-      });
+      "title": title,
+      "user": auth.user.user_id,
+      "content": content,
+      "content2": textAreaSecondRef.current.value,
+    });
 
     setOpened(false);
     setTitle("");
     setContent("");
     textAreaSecondRef.current.value = "";
-    
+
   };
+
+  const handleProofread = async () => {
+    // Start by checking if it's possible to create a session based on the availability of the model, and the characteristics of the device.
+    const { available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
+
+    if (available !== "no") {
+      const session = await ai.languageModel.create();
+
+      // Prompt the model and wait for the whole result to come back.  
+      const result = await session.prompt("Write me a poem");
+      console.log(result);
+    }
+
+  }
 
   return (
     <div className="h-screen w-screen bg-gray-900 flex items-center justify-center overflow-hidden">
@@ -150,9 +170,8 @@ const Write = () => {
       ) : null}
 
       <div
-        className={`w-full h-full max-w-6xl max-h-[90vh] bg-gray-800 ${
-          opened ? "opacity-5" : ""
-        } rounded-lg shadow-lg p-6 flex flex-col space-y-6 transition-all ease-in-out delay-150 duration-300`}
+        className={`w-full h-full max-w-6xl max-h-[90vh] bg-gray-800 ${opened ? "opacity-5" : ""
+          } rounded-lg shadow-lg p-6 flex flex-col space-y-6 transition-all ease-in-out delay-150 duration-300`}
       >
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-100">Translate Interface</h1>
@@ -250,7 +269,7 @@ const Write = () => {
             <button className="bg-[#FBFB5C] hover:bg-purple-600 px-4 py-2 rounded shadow cursor-pointer" >
               Summarize
             </button>
-            <button className="bg-black hover:bg-purple-600 text-white px-4 py-2 rounded shadow cursor-pointer" >
+            <button className="bg-black hover:bg-purple-600 text-white px-4 py-2 rounded shadow cursor-pointer" onClick={handleProofread} >
               {loading ? 'Proofreading...' : 'Proofread'}
             </button>
             <button
