@@ -10,8 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^43.3.1",
+    "@ckeditor/ckeditor5-react": "^9.4.0",
+    "@ckeditor/ckeditor5-style": "^43.3.1",
     "@tanstack/react-query": "^5.61.0",
     "axios": "^1.7.7",
+    "ckeditor5": "^43.3.1",
+    "dompurify": "^3.2.2",
+    "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",

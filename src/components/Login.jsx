@@ -1,75 +1,76 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import Nav from "./Nav";
 import Footer from "./Footer";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { useNavigate } from "react-router";
-import { IsAuthenticated } from "../helpers/isAuthenticated";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; // Import useAuth hook
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
-  const handleGoogleSignIn = () => {
-    // Your Google sign-in logic here
-    console.log("Google Sign-In Triggered");
-  };
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
- 
-  useEffect(() => {
-    if (IsAuthenticated()) {
-      navigate("/dashboard");
-    }
-  }, [navigate]);
+  const { setAuth } = useAuth(); // Get setAuth to update the AuthContext
 
-  const mutation = useMutation({
-    mutationFn: (newuser) => {
-      return axios.post(
+  // Handle login API call
+  const loginMutation = useMutation({
+    mutationFn: async (credentials) => {
+      const response = await axios.post(
         "http://127.0.0.1:8000/api/v1/account/api/token/",
-        newuser
+        credentials
       );
+      return response.data;
+    },
+
+    onSuccess: (data) => {
+      // Store tokens and user in AuthContext and localStorage
+      const decodedUser = jwtDecode(data.access); // Decode user data from token (if needed)
+      localStorage.setItem("token", data.access);
+      localStorage.setItem("user", JSON.stringify(decodedUser));
+
+      setAuth({ token: data.access, user: decodedUser }); // Update AuthContext
+
+      toast.success("Login successful!");
+      navigate("/dashboard");
+    },
+    onError: (error) => {
+      console.log(error.message);
+      const errorMsg =
+        error?.response?.data?.detail || "Error logging in. Please try again.";
+      toast.error(errorMsg);
+      setLoading(false); // Stop loading after error
     },
   });
-  if (mutation.error){
-    console.log(mutation.error);
-  }
-  const storeAccessToken = (response) => {
-    
-    // Store access and refresh token to local storage
-    localStorage.setItem("user", JSON.stringify(response.data));
-    
-    
-  }
 
-
-  
-  const onSuccess =() =>{
-    toast.success('Login Sucessfully', {toastId: "success"});
-    storeAccessToken(mutation.data);
-    navigate("/dashboard");
-  }
-
+  // Handle form submission
   const handleFormSubmit = (event) => {
     event.preventDefault();
-    const email = emailRef.current.value;
-    const password = passwordRef.current.value;
-    mutation.mutate({ email, password });
-    
+
+    const email = emailRef.current.value.trim();
+    const password = passwordRef.current.value.trim();
+
+    // Validate form input
+    if (!email || !password) {
+      toast.error("Email and password are required.");
+      return;
+    }
+
+    setLoading(true); // Set loading state
+    loginMutation.mutate({ email, password });
   };
 
-  useEffect(() => {
-    if (mutation.isSuccess) {
-      onSuccess();
+  // Handle Google sign-in (placeholder for actual logic)
+  const handleGoogleSignIn = async () => {
+    try {
+      toast.info("Google Sign-In is not implemented yet!");
+    } catch (error) {
+      toast.error("Failed to sign in with Google.");
     }
-  }, [mutation.isSuccess]);
-  
+  };
 
-  useEffect(() => {
-    if (mutation.isError) {
-      toast.error('Error login in', {toastId: "error"})
-    }
-  }, [mutation.isError]);
-  
   return (
     <>
       <div className="flex flex-col h-screen bg-gray-900 text-white font-montserrat">
@@ -83,7 +84,7 @@ const Login = () => {
               Log In
             </h2>
 
-            {/* Email and Password Fields */}
+            {/* Login Form */}
             <form className="space-y-4" onSubmit={handleFormSubmit}>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium">
@@ -116,9 +117,9 @@ const Login = () => {
               <button
                 type="submit"
                 className="w-full bg-[#FBFB5C] text-gray-700 p-3 rounded-md font-semibold hover:bg-yellow-400 transition duration-200"
-
+                disabled={loading} // Disable button when loading
               >
-                {mutation.isPending ? "loging..." : "Log In"}
+                {loading ? "Logging in..." : "Log In"}
               </button>
             </form>
 
@@ -153,6 +154,7 @@ const Login = () => {
             </div>
           </div>
         </div>
+
         {/* Footer */}
         <Footer />
       </div>

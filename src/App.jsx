@@ -3,10 +3,14 @@ import SpeechRecognitionEffect from "./components/SpeechRecognitionEffect";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext"; 
 
 
 // Global Authentication state
 const App = () => {
+  const { auth, logout } = useAuth(); // Use context to get user and token
+  const IsAuthenticated = auth.user 
+  
   const navigate = useNavigate();
   return (
     <div className="relative min-h-screen min-w-screen bg-gray-900 text-white flex flex-col font-montserrat ">
@@ -37,9 +41,10 @@ const App = () => {
           <div className="my-[200px]">
             <SpeechRecognitionEffect />
           </div>
-          <div className="border border-[#FBFB5C] p-4 rounded-full text-center md:w-[200px]">
+          {IsAuthenticated ? '' : <div className="border border-[#FBFB5C] p-4 rounded-full text-center md:w-[200px]">
             <button onClick={()=> navigate("/sign-up")}>Get Started</button>
-          </div>
+          </div>}
+          
         </div>
       </div>
       <Footer/>
