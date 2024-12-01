@@ -10,6 +10,7 @@ import axiosInstance from "../services/axiosInstance"; // Import axios instance
 import { useAuth } from "../context/AuthContext"; // Import AuthContext
 import useAxiosWithAuth from "../hooks/useAxiosWithAuth";
 import axios from "axios";
+import Anthropic from "@anthropic-ai/sdk";
 
 const Write = () => {
   const [language1, setLanguage1] = useState("English Us");
@@ -34,13 +35,15 @@ const Write = () => {
     addAuthInterceptor();
   }, [addAuthInterceptor]);
 
-
-
   useEffect(() => {
     async function translateContent() {
       if (content) {
         const contentStripHtml = strip(content);
-        const translatedText = await translate(language1code, language2code, contentStripHtml);
+        const translatedText = await translate(
+          language1code,
+          language2code,
+          contentStripHtml
+        );
         textAreaSecondRef.current.value = translatedText;
       }
     }
@@ -55,11 +58,11 @@ const Write = () => {
     { "English South Africa": "en-ZA" },
     { "English Uk": "en-GB" },
     { "English Us": "en-US" },
-    { "Japanese": "ja" },
+    { Japanese: "ja" },
   ];
 
   function strip(html) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.textContent || "";
   }
 
@@ -108,13 +111,13 @@ const Write = () => {
 
   const mutation = useMutation({
     mutationFn: async (newContent) => {
-      await axiosInstance.post('import/', newContent)
+      await axiosInstance.post("import/", newContent);
     },
-  })
+  });
 
   const onSuccess = () => {
     toast.success("Successful", { toastId: "success" });
-    // navigate("/dashboard"); 
+    // navigate("/dashboard");
   };
 
   useEffect(() => {
@@ -132,35 +135,44 @@ const Write = () => {
 
   const handleSaveToDb = () => {
     mutation.mutate({
-      "title": title,
-      "user": auth.user.user_id,
-      "content": content,
-      "content2": textAreaSecondRef.current.value,
+      title: title,
+      user: auth.user.user_id,
+      content: content,
+      content2: textAreaSecondRef.current.value,
     });
 
     setOpened(false);
     setTitle("");
     setContent("");
     textAreaSecondRef.current.value = "";
-
   };
 
   const handleProofread = async () => {
-    // Start by checking if it's possible to create a session based on the availability of the model, and the characteristics of the device.
-    const { available, defaultTemperature, defaultTopK, maxTopK } = await ai.languageModel.capabilities();
+    
+    const anthropic = new Anthropic({dangerouslyAllowBrowser: true , apiKey: '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'});
 
-    if (available !== "no") {
-      const session = await ai.languageModel.create();
-
-      // Prompt the model and wait for the whole result to come back.  
-      const result = await session.prompt("Write me a poem");
-      console.log(result);
-    }
-
-  }
+    const msg = await anthropic.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 1000,
+      temperature: 0,
+      system: "Respond only with short poems.",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Why is the ocean salty?",
+            },
+          ],
+        },
+      ],
+    });
+    console.log(msg);
+  };
 
   return (
-    <div className="h-screen w-screen bg-gray-900 flex items-center justify-center overflow-hidden">
+    <div className=" w-screen bg-gray-900 flex items-center justify-center overflow-hidden">
       {opened ? (
         <Popup
           setOpened={setOpened}
@@ -170,11 +182,14 @@ const Write = () => {
       ) : null}
 
       <div
-        className={`w-full h-full max-w-6xl max-h-[90vh] bg-gray-800 ${opened ? "opacity-5" : ""
-          } rounded-lg shadow-lg p-6 flex flex-col space-y-6 transition-all ease-in-out delay-150 duration-300`}
+        className={`w-full h-full max-w-6xl max-h-[90vh] bg-gray-800 ${
+          opened ? "opacity-5" : ""
+        } rounded-lg shadow-lg p-6 flex flex-col space-y-6 transition-all ease-in-out delay-150 duration-300`}
       >
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-100">Translate Interface</h1>
+          <h1 className="text-2xl font-bold text-gray-100">
+            Translate Interface
+          </h1>
         </div>
 
         <div className="flex-grow grid grid-cols-2 gap-4">
@@ -243,34 +258,16 @@ const Write = () => {
 
         <div className="flex justify-between items-center">
           <div className="flex gap-2 items-center">
-            <label
-              htmlFor="importData"
-              className="text-gray-200 font-medium mr-2"
-            >
-              Import Data:
-            </label>
-            <select
-              id="importData"
-              className="bg-gray-700 text-gray-200 p-2 rounded-md"
-              value={selectedImport}
-              onChange={(e) => setSelectedImport(e.target.value)}
-            >
-              <option value="" disabled>
-                Select an option
-              </option>
-              {importOptions.map((option) => (
-                <option key={option.id} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
 
             <Audio setContent={setContent} language1code={language1code} />
-            <button className="bg-[#FBFB5C] hover:bg-purple-600 px-4 py-2 rounded shadow cursor-pointer" >
+            <button className="bg-[#FBFB5C] hover:bg-purple-600 px-4 py-2 rounded shadow cursor-pointer">
               Summarize
             </button>
-            <button className="bg-black hover:bg-purple-600 text-white px-4 py-2 rounded shadow cursor-pointer" onClick={handleProofread} >
-              {loading ? 'Proofreading...' : 'Proofread'}
+            <button
+              className="bg-black hover:bg-purple-600 text-white px-4 py-2 rounded shadow cursor-pointer"
+              onClick={handleProofread}
+            >
+              {loading ? "Proofreading..." : "Proofread"}
             </button>
             <button
               className="bg-red-400 hover:bg-purple-600 text-white px-4 py-2 rounded shadow cursor-pointer"

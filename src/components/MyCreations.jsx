@@ -3,15 +3,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../services/axiosInstance";
 import axios from "axios";
 import useAxiosWithAuth from "../hooks/useAxiosWithAuth";
+import DOMPurify from "dompurify";
 
 const MyCreations = () => {
   const queryClient = useQueryClient();
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
-  const [syncItem, setSyncItem] = useState(null); // For handling Sync to Medium modal
+  const [syncItem, setSyncItem] = useState(null);
   const [isSyncModalVisible, setIsSyncModalVisible] = useState(false);
-  const [mediumToken, setMediumToken] = useState(""); // State for the Medium token
-  const [mediumAuthorId, setmediumAuthorId] = useState(""); // State for the Medium token
+  const [mediumToken, setMediumToken] = useState("");
+  const [mediumAuthorId, setMediumAuthorId] = useState("");
 
   const { addAuthInterceptor } = useAxiosWithAuth();
 
@@ -19,7 +20,6 @@ const MyCreations = () => {
     addAuthInterceptor();
   }, [addAuthInterceptor]);
 
-  // Fetch imports list
   const { data: imports = [], isLoading } = useQuery({
     queryKey: ["creations"],
     queryFn: async () => {
@@ -29,55 +29,9 @@ const MyCreations = () => {
     onError: (error) => console.error("Error fetching data:", error),
   });
 
-  // const getToken = async (platform) => {
-  //   console.log(`Connecting to ${platform}`);
-  //   if (platform === "Medium") {
-  //     try {
-  //       const response = await axiosInstance.get(
-  //         `/integration/retrieve/${auth.user.user_id}/`
-  //       );
-  //       // Prefill the token if it exists
-  //       setMediumToken(response.data.token || "");
-  //     } catch (error) {
-  //       console.error("Error fetching token:", error);
-  //       setMediumToken(""); // No token available
-  //     }
-  //   }
-  // };
+  
 
-  const getAuthorId = async () => {
-    try {
-      const response = await axios.get(
-        `https://cors-anywhere.herokuapp.com/api.medium.com/v1/me`,
-        {
-          headers: {
-            Authorization: `Bearer 2a578682a6dcadd2c1c66186c309486c45d4c19685719196c8c5f1dc30e8b04f7`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-      setmediumAuthorId(response.data.data.id);
-      console.log(response.data.data.id);
-      // Prefill the token if it exists
-      // setMediumToken(response.data.token || "");
-    } catch (error) {
-      console.error("Error fetching token:", error);
-      // setMediumToken(""); // No token available
-    }
-  };
 
-  // useEffect(() => {
-  //   getToken("Medium");
-
-  // }, []);
-  // console.log(mediumToken);
-
-  useEffect(() => {
-    getAuthorId();
-  }, []);
-
-  // Sync to Medium mutation
   const syncToMediumMutation = useMutation({
     mutationFn: async (item) => {
       await axios.post(
@@ -88,16 +42,12 @@ const MyCreations = () => {
         },
         {
           headers: {
-            Authorization: `Bearer 2a578682a6dcadd2c1c66186c309486c45d4c19685719196c8c5f1dc30e8b04f7`,
+            Authorization: `Bearer YOUR_ACCESS_TOKEN_HERE`,
             "Content-Type": "application/json",
             Accept: "application/json",
           },
         }
       );
-      // await axiosInstance.post(`https://api.medium.com/v1/users/${mediumToken}/posts`, {
-      //   title: item.title,
-      //   content: item.content,
-      // });
     },
     onSuccess: () => {
       alert("Content synced to Medium successfully!");
@@ -109,7 +59,6 @@ const MyCreations = () => {
     },
   });
 
-  // Handle detail view popup
   const openDetailView = (item) => {
     setSelectedDetail(item);
     setIsDetailVisible(true);
@@ -130,14 +79,27 @@ const MyCreations = () => {
     setSyncItem(null);
   };
 
+  const sanitizeHtml = (html) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+  
+    doc.querySelectorAll("img").forEach((img) => {
+      const src = img.getAttribute("src");
+      if (src && !src.startsWith("http")) {
+        img.setAttribute("src", `http://127.0.0.1:8000/${src}`);
+      }
+    });
+  
+    return DOMPurify.sanitize(doc.body.innerHTML);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="h-screen bg-gray-100 p-6 overflow-auto">
       <div className="bg-white p-4 shadow-md rounded-md">
-        {/* List View */}
         {isLoading ? (
           <p>Loading...</p>
         ) : (
-          <ul className="divide-y divide-gray-300 overflow-scroll">
+          <ul className="divide-y divide-gray-300  ">
             {imports.map((item) => (
               <li
                 key={item.id}
@@ -174,15 +136,26 @@ const MyCreations = () => {
         )}
       </div>
 
-      {/* Detail View Popup */}
       {isDetailVisible && selectedDetail && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-md w-1/2 max-h-[80vh] overflow-y-auto">
             <h2 className="text-xl font-semibold mb-4">
               {selectedDetail.title || "Untitled Document"}
             </h2>
-            <p className="text-gray-700 mb-2">
-              Content: {selectedDetail.content || "No content available"}
+            <p className="text-gray-700 mb-2"
+             dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(selectedDetail.content || "No content available"),
+            }}>
+              
+            </p>
+            <hr />
+            <p className="text-gray-700 mb-2"
+            
+            dangerouslySetInnerHTML={{
+              __html: sanitizeHtml(selectedDetail.content2 || "No content available"),
+            }}
+            >
+              
             </p>
             <p className="text-gray-700 mb-2">
               Created: {new Date(selectedDetail.date_created).toLocaleString()}
@@ -203,7 +176,6 @@ const MyCreations = () => {
         </div>
       )}
 
-      {/* Sync to Medium Modal */}
       {isSyncModalVisible && syncItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-md w-1/3">

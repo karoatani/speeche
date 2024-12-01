@@ -99,7 +99,7 @@ const Imports = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="h-screen bg-gray-100 p-6">
       <div className="bg-white p-4 shadow-md rounded-md">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-lg font-semibold">File List</h1>
@@ -112,7 +112,7 @@ const Imports = () => {
         {isLoading ? (
           <p>Loading...</p>
         ) : (
-          <ul className="divide-y divide-gray-300 overflow-scroll">
+          <ul className="divide-y divide-gray-300 ">
             {imports.map((item) => (
               <li
                 key={item.id}

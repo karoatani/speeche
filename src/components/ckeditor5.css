@@ -1,5 +1,5 @@
 .ck-editor__editable_inline {
-    /* min-height: 620px; Adjust height to your preference */
+    min-height: 600px; 
     font-size: 16px; /* Set font size */
   }
   
