@@ -4,17 +4,22 @@ import axiosInstance from "../services/axiosInstance";
 import axios from "axios";
 import useAxiosWithAuth from "../hooks/useAxiosWithAuth";
 import DOMPurify from "dompurify";
-
+import TurndownService from "turndown"; // Import turndown
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 const MyCreations = () => {
   const queryClient = useQueryClient();
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [isDetailVisible, setIsDetailVisible] = useState(false);
   const [syncItem, setSyncItem] = useState(null);
   const [isSyncModalVisible, setIsSyncModalVisible] = useState(false);
-  const [mediumToken, setMediumToken] = useState("");
   const [mediumAuthorId, setMediumAuthorId] = useState("");
-
+  const [coverImage, setCoverImage] = useState("");
+  const [token, setToken] = useState("");
+  const [pubId, setpubId] = useState("");
+  const [selectedContent, setSelectedContent] = useState("content");
   const { addAuthInterceptor } = useAxiosWithAuth();
+  const { auth } = useAuth();
 
   useEffect(() => {
     addAuthInterceptor();
@@ -92,6 +97,107 @@ const MyCreations = () => {
   
     return DOMPurify.sanitize(doc.body.innerHTML);
   };
+
+  const turndownService = new TurndownService();
+
+  const syncToHashnode = async () => {
+    if (!syncItem) return;
+
+    // Convert the content to markdown format
+    const contentMarkdown = turndownService.turndown(
+      sanitizeHtml(syncItem[selectedContent])
+    );
+    getHashnodeAuthInfo()
+
+    if (token && pubId){
+
+      publishPost(
+        syncItem.title || 'Placeholder title',
+        contentMarkdown || 'Placeholder Content',
+        coverImage,
+        pubId,
+        token
+      );
+    }
+  };
+
+  const getHashnodeAuthInfo = async () =>{
+    const response = await axiosInstance.get(
+      `/integration/retrieve/${auth.user.user_id}/`
+    );
+    const data = response.data;
+
+    if (data){
+      setToken(data['token']);
+      setpubId(data['pub_id']);
+      
+    }
+  }
+
+  const publishPost = async (
+    title,
+    contentMarkdown,
+    coverImage,
+    publicationId,
+    token
+  ) => {
+
+
+    
+    const input = {
+      title: title,
+      publicationId: publicationId,
+      contentMarkdown: contentMarkdown,
+      tags: [],
+      coverImageOptions: {
+        coverImageURL: coverImage,
+      },
+    };
+
+    const variables = {
+      input: input,
+    };
+
+    
+  try {
+    const response = await axios.post(
+      'https://gql.hashnode.com',
+      {
+        query: `
+        mutation PublishPost($input: PublishPostInput!) {
+          publishPost(input: $input) {
+            post {
+              id
+              title
+              content {
+                markdown
+              }
+              publication {
+                id
+                title
+              }
+            }
+          }
+        }
+      `,
+      variables: variables
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    toast.success("Synced successfully to Hashnode!");
+    closeSyncModal();
+  } catch (error) {
+    console.error("Error syncing to Hashnode:", error);
+    toast.error("Failed to sync to Hashnode. Please try again.");
+  }
+};
+
 
   return (
     <div className="h-screen bg-gray-100 p-6 overflow-auto">
@@ -185,6 +291,34 @@ const MyCreations = () => {
             <p className="text-gray-700 mb-4">
               This will upload the content to your Medium account.
             </p>
+            <div className="mb-4">
+              <label htmlFor="coverImage" className="block text-sm font-medium">
+                Enter Cover Image(Link to uploaded image)
+              </label>
+              <input
+                type="text"
+                id="coverImage"
+                className="w-full mt-2 px-3 py-2 border border-gray-700 rounded focus:outline-none"
+                onChange={(e) => setCoverImage(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="content" className="block text-sm font-medium">
+                Select Content
+              </label>
+              <select
+                id="content"
+                value={selectedContent}
+                onChange={(e) => setSelectedContent(e.target.value)}
+                className="w-full mt-2 px-3 py-2 border border-gray-700 rounded focus:outline-none"
+              >
+                <option value="content">Content</option>
+                <option value="content2">Content 2</option>
+              </select>
+            </div>
+
+
             <div className="flex justify-end gap-4">
               <button
                 onClick={closeSyncModal}
@@ -193,7 +327,7 @@ const MyCreations = () => {
                 Cancel
               </button>
               <button
-                onClick={() => syncToMediumMutation.mutate(syncItem)}
+                onClick={() => syncToHashnode()}
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
               >
                 Confirm Sync

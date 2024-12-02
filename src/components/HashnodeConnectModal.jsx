@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 
-const HashnodeConnectModal = ({ isOpen, onClose, onSubmit, initialToken }) => {
+const HashnodeConnectModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialToken,
+  initialPublicationId, // Accept initial publicationId
+}) => {
   const [accessToken, setAccessToken] = useState("");
+  const [publicationId, setPublicationId] = useState(""); // State for publicationId
   const [isPrefilled, setIsPrefilled] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      // Prefill the access token if it's available
       if (initialToken) {
         setAccessToken(initialToken);
         setIsPrefilled(true);
@@ -14,12 +20,14 @@ const HashnodeConnectModal = ({ isOpen, onClose, onSubmit, initialToken }) => {
         setAccessToken("");
         setIsPrefilled(false);
       }
+      setPublicationId(initialPublicationId || ""); // Prefill publicationId
     }
-  }, [isOpen, initialToken]);
+  }, [isOpen, initialToken, initialPublicationId]);
 
   const handleSubmit = () => {
-    onSubmit(accessToken);
+    onSubmit(accessToken, publicationId); // Include publicationId in submission
     setAccessToken("");
+    setPublicationId("");
     setIsPrefilled(false);
     onClose();
   };
@@ -33,7 +41,7 @@ const HashnodeConnectModal = ({ isOpen, onClose, onSubmit, initialToken }) => {
         <p className="text-sm text-gray-300 mb-4">
           You can find your access token on your{" "}
           <a
-            href="https://medium.com/me/settings"
+            href="#"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-500 hover:underline"
@@ -49,10 +57,22 @@ const HashnodeConnectModal = ({ isOpen, onClose, onSubmit, initialToken }) => {
           <input
             type="text"
             id="accessToken"
-            className="w-full mt-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full mt-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded focus:outline-none"
             value={accessToken}
             onChange={(e) => setAccessToken(e.target.value)}
-            disabled={isPrefilled} // Disable input if the token is prefilled
+            
+          />
+        </div>
+        <div className="mb-4">
+          <label htmlFor="publicationId" className="block text-sm font-medium">
+            Publication ID
+          </label>
+          <input
+            type="text"
+            id="publicationId"
+            className="w-full mt-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded focus:outline-none"
+            value={publicationId}
+            onChange={(e) => setPublicationId(e.target.value)}
           />
         </div>
         <div className="flex justify-end gap-4">
@@ -64,7 +84,7 @@ const HashnodeConnectModal = ({ isOpen, onClose, onSubmit, initialToken }) => {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isPrefilled || !accessToken.trim()} // Disable if prefilled or input is empty
+            disabled={isPrefilled || !accessToken.trim() || !publicationId.trim()}
             className="px-4 py-2 bg-blue-600 text-sm rounded hover:bg-blue-500 disabled:bg-gray-700"
           >
             Submit
