@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      const response = await axios.post('http://127.0.0.1:8000/api/v1/account/api/token/refresh/', { refresh: refreshToken });
+      const response = await axios.post('https://speechee-backend-production.up.railway.app/api/v1/account/api/token/refresh/', { refresh: refreshToken });
       const newToken = response.data.access;
       const newUser = jwtDecode(newToken);
       

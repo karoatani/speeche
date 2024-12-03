@@ -19,7 +19,7 @@ const Login = () => {
   const loginMutation = useMutation({
     mutationFn: async (credentials) => {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/v1/account/api/token/",
+        "https://speechee-backend-production.up.railway.app/api/v1/account/api/token/",
         credentials
       );
       return response.data;
