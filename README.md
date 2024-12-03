@@ -20,3 +20,8 @@ This is the frontend for speechee
 ## Run Development Server
 
 `npm run dev`
+
+
+## Link to Backend Repo
+
+[Speechee backend](https://github.com/karoatani/speechee-backend)
