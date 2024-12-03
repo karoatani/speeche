@@ -13,7 +13,6 @@ const MyCreations = () => {
   const [isDetailVisible, setIsDetailVisible] = useState(false);
   const [syncItem, setSyncItem] = useState(null);
   const [isSyncModalVisible, setIsSyncModalVisible] = useState(false);
-  const [mediumAuthorId, setMediumAuthorId] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [token, setToken] = useState("");
   const [pubId, setpubId] = useState("");
@@ -37,33 +36,7 @@ const MyCreations = () => {
   
 
 
-  const syncToMediumMutation = useMutation({
-    mutationFn: async (item) => {
-      await axios.post(
-        `https://cors-anywhere.herokuapp.com/api.medium.com/v1/users/${mediumAuthorId}/posts/`,
-        {
-          title: item.title,
-          content: item.content,
-        },
-        {
-          headers: {
-            Authorization: `Bearer YOUR_ACCESS_TOKEN_HERE`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-    },
-    onSuccess: () => {
-      alert("Content synced to Medium successfully!");
-      setIsSyncModalVisible(false);
-    },
-    onError: (error) => {
-      console.error("Error syncing content:", error);
-      alert("Error syncing content.");
-    },
-  });
-
+  
   const openDetailView = (item) => {
     setSelectedDetail(item);
     setIsDetailVisible(true);
@@ -91,7 +64,7 @@ const MyCreations = () => {
     doc.querySelectorAll("img").forEach((img) => {
       const src = img.getAttribute("src");
       if (src && !src.startsWith("http")) {
-        img.setAttribute("src", `http://127.0.0.1:8000/${src}`);
+        img.setAttribute("src", `https://speechee-backend-production.up.railway.app/${src}`);
       }
     });
   
@@ -143,7 +116,7 @@ const MyCreations = () => {
   ) => {
 
 
-    
+    console.log(contentMarkdown);
     const input = {
       title: title,
       publicationId: publicationId,
@@ -233,7 +206,7 @@ const MyCreations = () => {
                     onClick={() => openSyncModal(item)}
                     className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                   >
-                    Sync to Medium
+                    Sync to Hashnode
                   </button>
                 </div>
               </li>
@@ -286,10 +259,10 @@ const MyCreations = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-md w-1/3">
             <h2 className="text-lg font-semibold mb-4">
-              Sync "{syncItem.title}" to Medium?
+              Sync "{syncItem.title}" to Hashnode?
             </h2>
             <p className="text-gray-700 mb-4">
-              This will upload the content to your Medium account.
+              This will upload the content to your Hashnode account.
             </p>
             <div className="mb-4">
               <label htmlFor="coverImage" className="block text-sm font-medium">

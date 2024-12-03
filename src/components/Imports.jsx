@@ -97,7 +97,7 @@ const Imports = () => {
     doc.querySelectorAll("img").forEach((img) => {
       const src = img.getAttribute("src");
       if (src && !src.startsWith("http")) {
-        img.setAttribute("src", `http://127.0.0.1:8000/${src}`);
+        img.setAttribute("src", `https://speechee-backend-production.up.railway.app/${src}`);
       }
     });
 

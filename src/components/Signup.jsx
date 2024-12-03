@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -11,7 +11,7 @@ const SignUp = () => {
   const mutation = useMutation({
     mutationFn: (newuser) => {
       return axios.post(
-        "http://127.0.0.1:8000/api/v1/account/register/",
+        "https://speechee-backend-production.up.railway.app/api/v1/account/register/",
         newuser
       );
     },

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create Axios instance
 const axiosInstance = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/v1/account/', // Replace with your API base URL
+  baseURL: 'https://speechee-backend-production.up.railway.app/api/v1/account/', // Replace with your API base URL
   headers: {
     'Content-Type': 'application/json',
   },

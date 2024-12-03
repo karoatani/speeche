@@ -1,6 +1,6 @@
-.ck-editor__editable_inline {
-    min-height: 600px; 
-    font-size: 16px; /* Set font size */
-  }
-  
-  
+.ckeditor-container {
+  height: 400px; /* Fixed height */
+  min-height: 400px; /* Ensure the height doesn't shrink below this value */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+

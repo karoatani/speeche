@@ -1,6 +1,6 @@
 import React from "react";
 
-const Popup = ({ setOpened, handleSaveToDb, mutation }) => {
+const Popup = ({ setOpened, handleSaveToDb, mutation, setTitle }) => {
   const handleDismissal = () => {
     setOpened(false);
   };
@@ -31,6 +31,7 @@ const Popup = ({ setOpened, handleSaveToDb, mutation }) => {
             name="title"
             placeholder="Your article title..."
             className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            onChange={(e) => setTitle(e.target.value)}          
           />
         </div>
 
